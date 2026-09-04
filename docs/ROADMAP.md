@@ -13,8 +13,8 @@ with `file:line` feedback). The agent is the primary author of the React app in
 
 Nothing downstream works without a local S3, so this comes first.
 
-1. Initial `git` commit of the scaffold.
-2. Harden `.gitignore`: `.env`, secrets, Terraform state/plan files, dbt artifacts.
+1. ~~Initial `git` commit of the scaffold.~~
+2. ~~Harden `.gitignore`: `.env`, secrets, Terraform state/plan files, dbt artifacts.~~
 3. `docker-compose.yml`: Floci (S3 + Redshift emulation), Qdrant, Postgres
    (Dagster metadata), Iceberg catalog (e.g. Polaris).
 4. Terraform against Floci: S3 buckets + Redshift schema.
