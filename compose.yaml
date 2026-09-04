@@ -1,4 +1,4 @@
- services:
+services:
   floci:
     image: floci/floci:latest
     container_name: floci
