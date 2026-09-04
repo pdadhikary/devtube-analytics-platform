@@ -20,3 +20,9 @@ build-backend = "uv_build"
 
 [tool.ty.environment]
 python = "../../.venv"
+
+[tool.dg]
+directory_type = "project"
+
+[tool.dg.project]
+root_module = "devtube_dagster"

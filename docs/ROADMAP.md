@@ -15,10 +15,10 @@ Nothing downstream works without a local S3, so this comes first.
 
 1. ~~Initial `git` commit of the scaffold.~~
 2. ~~Harden `.gitignore`: `.env`, secrets, Terraform state/plan files, dbt artifacts.~~
-3. `docker-compose.yml`: Floci (S3 + Redshift emulation), Qdrant, Postgres
-   (Dagster metadata), Iceberg catalog (e.g. Polaris).
+3. `docker-compose.yml`: ~~Floci (S3 + Redshift emulation),~~ Qdrant, Postgres
+   ~~(Dagster metadata),~~ Iceberg catalog (e.g. Polaris).
 4. Terraform against Floci: S3 buckets + Redshift schema.
-5. `.env` with `YOUTUBE_API_KEY` (never committed).
+5. ~~`.env` with `YOUTUBE_API_KEY` (never committed).~~
 6. Config hygiene: one place for credentials/endpoints, documented.
 
 **Verify:** a smoke test writes a file to S3 and reads it back; the same for a
