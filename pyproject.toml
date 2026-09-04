@@ -1,0 +1,26 @@
+[project]
+name = "devtube-analytics-platform"
+version = "0.1.0"
+description = "Intelligent anlytics platform for the latest trends in the YouTube dev space."
+readme = "README.md"
+authors = [
+    { name = "Deepta", email = "deeptoadhikary@gmail.com" }
+]
+requires-python = ">=3.13"
+dependencies = []
+
+[tool.uv.workspace]
+members = [
+    "packages/*",
+    "apps/*",
+    "orchestration/devtube_dagster",
+    "rag/devtube_rag",
+]
+exclude = ["apps/devtube_web"]
+
+[build-system]
+requires = ["uv_build>=0.11.22,<0.12.0"]
+build-backend = "uv_build"
+
+[tool.ty.environment]
+python = ".venv"
