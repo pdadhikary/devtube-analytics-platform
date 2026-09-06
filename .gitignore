@@ -68,5 +68,5 @@ dbt/.user.yml
 dbt/logs/
 
 # duckdb
-duckdb/
+duckdb/*
 !duckdb/.gitkeep
