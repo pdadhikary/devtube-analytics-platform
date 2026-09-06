@@ -70,3 +70,13 @@ dbt/target/
 **/dbt_packages/
 **/dbt_modules/
 **/dbt_internal_packages/
+
+# rustfs
+rustfs/logs/*
+rustfs/data/*
+!rustfs/logs/.gitkeep
+!rustfs/data/.gitkeep
+
+# duckdb
+duckdb/
+!duckdb/.gitkeep

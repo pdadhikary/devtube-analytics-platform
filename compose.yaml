@@ -1,20 +1,33 @@
 services:
-  floci:
-    image: floci/floci:latest
-    container_name: floci
-    restart: always
-    ports:
-      - "4566:4566"
-      - "6379-6399:6379-6399"
-      - "7100-7199:7100-7199"
+  rustfs_perms:
+    image: alpine
+    user: root
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - floci-data:/app/data
+      - ./rustfs:/fix_path
+    command: chown -R 10001:10001 /fix_path
+
+  rustfs:
+    image: rustfs/rustfs:latest
+    container_name: rustfs
+    restart: always
+    depends_on:
+      rustfs_perms:
+        condition: service_completed_successfully
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - ./rustfs/data:/data
+      - ./rustfs/logs/:/var/log/rustfs/
     environment:
-      FLOCI_HOSTNAME: floci
-      FLOCI_SERVICES_DOCKER_NETWORK: devtube_network
-      FLOCI_STORAGE_MODE: persistent
-      FLOCI_STORAGE_PERSISTENT_PATH: /app/data
+      - RUSTFS_ADDRESS=:9000
+      - RUSTFS_CONSOLE_ADDRESS=:9001
+      - RUSTFS_CONSOLE_ENABLE=true
+      - RUSTFS_OBS_LOGGER_LEVEL=error
+      - RUSTFS_OBS_LOG_DIRECTORY=/var/log/rustfs/
+      - RUSTFS_ACCESS_KEY=${AWS_ACCESS_KEY_ID}
+      - RUSTFS_SECRET_KEY=${AWS_SECRET_ACCESS_KEY}
+      - RUSTFS_REGION=${AWS_DEFAULT_REGION}
     networks:
       - devtube_network
 
@@ -35,7 +48,6 @@ services:
       - devtube_network
 
 volumes:
-  floci-data:
   dagster-data:
 
 networks:
