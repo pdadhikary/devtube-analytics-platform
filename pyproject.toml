@@ -7,7 +7,12 @@ authors = [
     { name = "Deepta", email = "deeptoadhikary@gmail.com" }
 ]
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "dbt-duckdb>=1.11.0",
+]
+
+[tool.uv]
+package = false
 
 [tool.uv.workspace]
 members = [
@@ -21,6 +26,13 @@ exclude = ["apps/devtube_web"]
 [build-system]
 requires = ["uv_build>=0.11.22,<0.12.0"]
 build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "boto3>=1.43.89",
+    "duckdb",
+    "psycopg[binary]>=3.3.5",
+]
 
 [tool.ty.environment]
 python = ".venv"
