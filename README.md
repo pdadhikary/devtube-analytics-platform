@@ -35,7 +35,7 @@ software development, AI/ML, Linux, programming, developer tooling, and SaaS.
 Enough videos to make the analytics meaningful; historical backfill is
 deliberately not the project itself.
 
-**MVP** — batch ingestion, S3 raw storage, Iceberg lakehouse, Redshift, dbt,
+**MVP** — batch ingestion, S3-compatible raw storage (RustFS), Iceberg lakehouse, DuckDB analytics, dbt,
 orchestration, trend scoring, transcript/description enrichment, Qdrant vector
 search, hybrid retrieval, RAG with citations, and a simulated streaming path.
 
@@ -107,8 +107,8 @@ End-to-end, from the YouTube API to the dashboard and chat:
                                         │ Raw API responses
                                         ▼
                    ┌─────────────────────────────────────────┐
-                   │                   S3                    │
-                   │              RAW DATA LAKE              │
+                   │                 RustFS                  │
+                   │          RAW DATA LAKE (S3 API)         │
                    │                                         │
                    │  videos/  channels/  comments/          │
                    │  transcripts/  metrics/                 │
@@ -135,8 +135,8 @@ End-to-end, from the YouTube API to the dashboard and chat:
                              │           │ Description        │
                              ▼           │ Comments           │
                      ┌────────────────┐  └─────────┬──────────┘
-                     │    Redshift    │            │
-                     │                │            ▼
+                     │     DuckDB     │            │
+                     │  (dbt marts)   │            ▼
                      │ Analytics      │   ┌─────────────────┐
                      │ Trend metrics  │   │    Chunking     │
                      │ Dimensions     │   │ + normalization │
@@ -188,8 +188,10 @@ End-to-end, from the YouTube API to the dashboard and chat:
 
 After the raw data lake, the flow splits into two paths:
 
-- **Analytics path**: Iceberg Bronze → Silver → Gold, then dbt transformations
-  into Redshift, producing the dimensions, facts, and trend metrics.
+- **Analytics path**: Iceberg Bronze → Silver → Gold, then dbt (via
+  dbt-duckdb) reads the Gold tables in place over S3 and materializes marts
+  into a local DuckDB database, producing the dimensions, facts, and trend
+  metrics.
 - **Content path**: transcripts, descriptions, and comments are chunked,
   normalized, embedded, and stored in Qdrant with full provenance metadata.
 
@@ -204,11 +206,11 @@ never raw lifetime views alone.
 |------|------------|
 | Language | Python 3.13 (uv workspaces) |
 | Containers | Docker + Docker Compose |
-| Infrastructure | Terraform + Floci (local AWS emulation) |
-| Object storage | S3 (via Floci) |
+| Infrastructure | Terraform + Docker Compose (RustFS object storage) |
+| Object storage | RustFS (S3-compatible) |
 | Lakehouse | Apache Iceberg + Parquet |
-| Warehouse | Redshift (via Floci) |
-| Transformations | dbt |
+| Analytics engine | DuckDB (embedded, dbt-duckdb) |
+| Transformations | dbt (dbt-duckdb) |
 | Batch processing | Polars |
 | Orchestration | Dagster |
 | Vector database | Qdrant |

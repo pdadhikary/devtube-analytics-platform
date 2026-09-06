@@ -11,21 +11,21 @@ with `file:line` feedback). The agent is the primary author of the React app in
 
 ## Milestone 0 — Repo hygiene + environment bootstrap (~1 day)
 
-Nothing downstream works without a local S3, so this comes first.
+Nothing downstream works without local object storage (RustFS), so this comes first.
 
 1. ~~Initial `git` commit of the scaffold.~~
 2. ~~Harden `.gitignore`: `.env`, secrets, Terraform state/plan files, dbt artifacts.~~
-3. `docker-compose.yml`: ~~Floci (S3 + Redshift emulation),~~ Qdrant, Postgres
-   ~~(Dagster metadata),~~ Iceberg catalog (e.g. Polaris).
-4. Terraform against Floci: S3 buckets + Redshift schema.
+3. `docker-compose.yml`: RustFS (S3-compatible object storage), Qdrant, Postgres
+   (Dagster metadata), Iceberg catalog (e.g. Polaris).
+4. Terraform against RustFS: the object storage bucket.
 5. ~~`.env` with `YOUTUBE_API_KEY` (never committed).~~
 6. Config hygiene: one place for credentials/endpoints, documented.
 
-**Verify:** a smoke test writes a file to S3 and reads it back; the same for a
-Redshift table. Definition of done: *a fresh local environment can be created
-using Docker + Terraform against Floci.*
+**Verify:** a smoke test writes a file to object storage and reads it back; the
+same for a DuckDB analytics check. Definition of done: *a fresh local
+environment can be created using Docker + Terraform against RustFS.*
 
-## Milestone 1 — Batch ingestion → raw S3 (~2–3 days)
+## Milestone 1 — Batch ingestion → raw object storage (~2–3 days)
 
 1. `devtube_ingestion`: YouTube Data API client — channels, videos, statistics,
    comments, transcripts.
@@ -34,12 +34,12 @@ using Docker + Terraform against Floci.*
    keep the original API response byte-for-byte.
 4. `devtube_pipeline`: minimal Dagster job running ingestion; structured logs
    (`run_id`, duration, records written/failed).
-5. pytest unit tests (mocked HTTP) + integration test against local S3.
+5. pytest unit tests (mocked HTTP) + integration test against local object storage (RustFS).
 
 **Verify:** running the job twice produces no duplicate logical records; raw data
 is intact under `videos/`, `channels/`, `comments/`, `transcripts/`, `metrics/`.
 Definition of done: *batch pipeline ingests curated Tech YouTube data into
-immutable S3 raw storage.*
+immutable S3-compatible raw storage (RustFS).*
 
 ## Milestone 2 — Iceberg Bronze/Silver/Gold (~2–3 days)
 
@@ -53,9 +53,9 @@ immutable S3 raw storage.*
 behavior are demonstrable. Definition of done: *Iceberg Bronze/Silver/Gold layers
 exist and can be queried reliably.*
 
-## Milestone 3 — dbt + Redshift + trend scoring (~2–3 days)
+## Milestone 3 — dbt (dbt-duckdb) + trend scoring (~2–3 days)
 
-1. dbt project: staging and mart models loading into Redshift (Floci).
+1. dbt project: staging and mart models materializing into a local DuckDB database.
 2. dbt tests + data-quality checks: `not_null`, `unique`, `relationships`,
    `accepted_values`; catch invalid/duplicate data.
 3. Trend scoring — not raw lifetime views: velocity × recency × engagement ×
@@ -65,7 +65,7 @@ exist and can be queried reliably.*
 
 **Verify:** dbt tests fail on bad data; a reproducible orchestrated batch job
 produces updated trend results. This closes the *batch ingestion + analytics*
-phase — the next phase depends on a solid warehouse.
+phase — the next phase depends on a solid analytics layer.
 
 ## Milestone 4 — Content processing + embeddings + Qdrant (~2–3 days)
 
@@ -122,7 +122,7 @@ Agent-authored, against the `devtube_api` contracts from Milestone 5.
 - The frontend can start earlier with mocked API data if a stable contract is
   agreed upfront; otherwise start after Milestone 5.
 - Embedding-model selection and chunking experiments can be prototyped in
-  isolation during Milestone 4 without blocking the warehouse.
+  isolation during Milestone 4 without blocking the analytics layer.
 
 ## Notes
 
@@ -130,3 +130,7 @@ Agent-authored, against the `devtube_api` contracts from Milestone 5.
   3–4h/day, which fits the 15-day plan if each milestone ships on schedule.
 - If a milestone slips, cut scope in the milestone itself (drop a table, a
   metric) rather than skipping a verification step.
+- The local stack uses RustFS (S3-compatible) for object storage and DuckDB
+  (embedded, via dbt-duckdb) for analytics. These replace the Floci AWS
+  emulator, whose Redshift `DescribeClusters` response omits fields the
+  Terraform provider requires (https://github.com/floci-io/floci/issues/3098).

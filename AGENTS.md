@@ -1,8 +1,9 @@
 # AGENTS.md
 
 DevTube Analytics Platform — a data engineering + AI platform that answers
-"What is popular today in Dev YouTube?" Pipeline: batch ingestion → S3/Iceberg
-lakehouse → Redshift/dbt analytics → trend scoring → RAG chat.
+"What is popular today in Dev YouTube?" Pipeline: batch ingestion → RustFS
+(S3-compatible)/Iceberg lakehouse → DuckDB/dbt analytics → trend scoring →
+RAG chat.
 
 ## Product goals
 
@@ -38,10 +39,10 @@ This is a learning project: the user writes the backend by hand and learns by do
 
 ## Definition of done
 
-- A fresh local environment can be created using Docker + Terraform against Floci.
-- The batch pipeline ingests curated Tech YouTube data into immutable S3 raw storage.
+- A fresh local environment can be created using Docker + Terraform against RustFS.
+- The batch pipeline ingests curated Tech YouTube data into immutable S3-compatible raw storage (RustFS).
 - Iceberg Bronze/Silver/Gold layers exist and can be queried reliably.
-- Redshift contains analytical models suitable for trend analysis.
+- DuckDB contains analytical models suitable for trend analysis.
 - dbt tests and data-quality checks catch invalid/duplicate data.
 - A reproducible orchestrated batch job produces updated trend results.
 - The system identifies trending topics, videos, and creators using more than raw lifetime views.
