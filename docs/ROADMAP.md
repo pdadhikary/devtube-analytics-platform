@@ -13,12 +13,12 @@ with `file:line` feedback). The agent is the primary author of the React app in
 
 Nothing downstream works without local object storage (RustFS), so this comes first.
 
-1. ~~Initial `git` commit of the scaffold.~~
-2. ~~Harden `.gitignore`: `.env`, secrets, Terraform state/plan files, dbt artifacts.~~
+1. Initial `git` commit of the scaffold.
+2. Harden `.gitignore`: `.env`, secrets, Terraform state/plan files, dbt artifacts.
 3. `docker-compose.yml`: RustFS (S3-compatible object storage), Qdrant, Postgres
    (Dagster metadata), Iceberg catalog (e.g. Polaris).
-4. Terraform against RustFS: the object storage bucket.
-5. ~~`.env` with `YOUTUBE_API_KEY` (never committed).~~
+4. terraform against rustfs: the object storage bucket.
+5. `.env` with `YOUTUBE_API_KEY` (never committed).
 6. Config hygiene: one place for credentials/endpoints, documented.
 
 **Verify:** a smoke test writes a file to object storage and reads it back; the
