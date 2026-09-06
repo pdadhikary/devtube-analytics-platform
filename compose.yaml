@@ -1,5 +1,18 @@
 services:
+  qdrant:
+    image: qdrant/qdrant:latest
+    restart: always
+    container_name: qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
     volumes:
+      - qdrant-data:/qdrant/storage
+    environment:
+      - QDRANT__LOG_LEVEL=INFO
+      - QDRANT__SERVICE__API_KEY=${QDRANT_SECRET_KEY}
+    networks:
+      - devtube_network
 
   rustfs:
     image: rustfs/rustfs:latest
