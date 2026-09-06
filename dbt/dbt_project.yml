@@ -1,0 +1,12 @@
+name: devtube
+version: "1.0"
+profile: devtube
+model-paths: [models]
+test-paths: [tests]
+clean-targets: [target, dbt_packages]
+models:
+  devtube:
+    staging:
+      +materialized: view
+    marts:
+      +materialized: table

@@ -71,6 +71,10 @@ dbt/target/
 **/dbt_modules/
 **/dbt_internal_packages/
 
+# dbt user state
+dbt/.user.yml
+dbt/logs/
+
 # rustfs
 rustfs/logs/*
 rustfs/data/*
