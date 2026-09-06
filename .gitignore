@@ -14,11 +14,6 @@ __pycache__/
 
 # Logs
 **/*.log
-npm-debug.log*
-**/yarn-debug.log*
-**/yarn-error.log*
-**/pnpm-debug.log*
-**/lerna-debug.log*
 
 **/node_modules
 **/dist-ssr
@@ -56,9 +51,6 @@ npm-debug.log*
 **/*_override.tf
 **/*_override.tf.json
 
-# Ignore transient lock info files created by terraform apply
-**/.terraform.tfstate.lock.info
-
 # Ignore CLI configuration files
 **/.terraformrc
 **/terraform.rc
@@ -74,12 +66,6 @@ dbt/target/
 # dbt user state
 dbt/.user.yml
 dbt/logs/
-
-# rustfs
-rustfs/logs/*
-rustfs/data/*
-!rustfs/logs/.gitkeep
-!rustfs/data/.gitkeep
 
 # duckdb
 duckdb/
