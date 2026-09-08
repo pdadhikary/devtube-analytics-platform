@@ -3,9 +3,9 @@ storage:
     postgres_db:
       hostname: localhost
       username:
-        env: DB_USER
+        env: DAGSTER_DB_USER
       password:
-        env: DB_PASSWORD
+        env: DAGSTER_DB_PASSWORD
       db_name:
-        env: DB_NAME
+        env: DAGSTER_DB_NAME
       port: 5432
