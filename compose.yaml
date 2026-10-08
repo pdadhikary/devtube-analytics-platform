@@ -35,82 +35,6 @@ services:
     networks:
       - devtube_network
 
-  polaris_db:
-    image: postgres:18-alpine
-    container_name: polaris_db
-    restart: always
-    ports:
-      - "5433:5432"
-    volumes:
-      - polaris-data:/var/lib/postgresql
-    environment:
-      POSTGRES_USER: ${POLARIS_DB_USER}
-      POSTGRES_PASSWORD: ${POLARIS_DB_PASSWORD}
-      POSTGRES_DB: ${POLARIS_DB_NAME}
-      TZ: ${TZ:-UTC}
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POLARIS_DB_USER} -d ${POLARIS_DB_NAME}"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-    networks:
-      - devtube_network
-
-  polaris_bootstrap:
-    image: apache/polaris-admin-tool:latest
-    container_name: polaris_bootstrap
-    restart: "no"
-    depends_on:
-      polaris_db:
-        condition: service_healthy
-    environment:
-      - polaris.persistence.type=relational-jdbc
-      - quarkus.datasource.jdbc.url=jdbc:postgresql://polaris_db:5432/${POLARIS_DB_NAME}
-      - quarkus.datasource.username=${POLARIS_DB_USER}
-      - quarkus.datasource.password=${POLARIS_DB_PASSWORD}
-    command:
-      - bootstrap
-      - -r
-      - POLARIS
-      - -c
-      - "POLARIS,${POLARIS_CLIENT_ID},${POLARIS_CLIENT_SECRET}"
-    networks:
-      - devtube_network
-
-  polaris:
-    image: apache/polaris:latest
-    container_name: polaris
-    restart: always
-    ports:
-      - "8181:8181"
-      - "8182:8182"
-    environment:
-      - POLARIS_BOOTSTRAP_CREDENTIALS=POLARIS,${POLARIS_CLIENT_ID:-root},${POLARIS_CLIENT_SECRET:-s3cr3t}
-      - polaris.realm-context.realms=POLARIS
-      - polaris.persistence.type=relational-jdbc
-      - quarkus.datasource.jdbc.url=jdbc:postgresql://polaris_db:5432/${POLARIS_DB_NAME}
-      - quarkus.datasource.username=${POLARIS_DB_USER}
-      - quarkus.datasource.password=${POLARIS_DB_PASSWORD}
-      - AWS_REGION=${AWS_DEFAULT_REGION}
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-    depends_on:
-      polaris_bootstrap:
-        condition: service_completed_successfully
-      polaris_db:
-        condition: service_healthy
-      rustfs:
-        condition: service_started
-    healthcheck:
-      test: ["CMD", "curl", "--fail", "http://localhost:8182/q/health"]
-      interval: 2s
-      timeout: 10s
-      retries: 10
-      start_period: 10s
-    networks:
-      - devtube_network
-
-
   dagster_db:
     image: postgres:18-alpine
     container_name: dagster_db
@@ -132,7 +56,6 @@ volumes:
   rustfs-logs:
   dagster-data:
   qdrant-data:
-  polaris-data:
 
 networks:
   devtube_network:
