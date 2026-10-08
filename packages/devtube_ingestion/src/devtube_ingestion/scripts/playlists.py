@@ -1,11 +1,12 @@
 import boto3
-import polars as pl
+import pyarrow as pa
 import yaml
 from mypy_boto3_s3 import S3Client
 from pyiceberg.catalog import load_catalog
 
 from devtube_ingestion.client import get_youtube_client
 from devtube_ingestion.models import PlaylistItemTableRow, PlaylistResponse
+from devtube_ingestion.schema import playlistItemArrowSchema, playlistItemSchema
 from devtube_ingestion.settings import settings
 from devtube_ingestion.utils import get_n_days_ago, get_uuid, iso_to_UTC, today
 
@@ -19,8 +20,8 @@ def main(channels_yaml_file: str):
 
     run_id = get_uuid()
 
+    s3_client: S3Client = boto3.client("s3", endpoint_url=settings.aws_endpoint_url)
     with get_youtube_client() as client:
-        s3_client: S3Client = boto3.client("s3", endpoint_url=settings.aws_endpoint_url)
         table_rows: list[PlaylistItemTableRow] = []
         for channels in channels_list["channels"]:
             channel_id, channel_name = channels["id"], channels["name"]
@@ -65,33 +66,49 @@ def main(channels_yaml_file: str):
                     )
                     table_rows.append(row)
 
+            object_key = f"raw/playlist_items/ingestion_date={today_dt.strftime('%Y-%m-%d')}/playlist_id={recently_uploaded_playlistId}/run_id={run_id}/payload.json"
             s3_client.put_object(
                 Bucket=settings.s3_bucket_name,
-                Key=f"raw/playlist_items/ingestion_date={today_dt.strftime('%Y-%m-%d')}/playlist_id={recently_uploaded_playlistId}/run_id={run_id}/payload.json",
+                Key=object_key,
                 Body=data.model_dump_json().encode("utf-8"),
                 ContentType="application/json",
             )
 
-    df = pl.DataFrame([row.model_dump() for row in table_rows])
-    arrow_table = df.to_arrow()
+    s3_client.close()
 
-    catalog = load_catalog("default")
+    arrow_table = pa.Table.from_pylist(
+        [row.model_dump() for row in table_rows], schema=playlistItemArrowSchema
+    )
+
+    catalog = load_catalog(
+        "default",
+        **{
+            "type": "sql",
+            "uri": "sqlite:///catalog.db",
+            "warehouse": f"s3://{settings.s3_bucket_name}/",
+            "s3.endpoint": settings.aws_endpoint_url,
+            "s3.region": settings.aws_default_region,
+            "s3.access-key-id": settings.aws_access_key_id,
+            "s3.secret-access-key": settings.aws_secret_access_key,
+        },
+    )
+
+    if not catalog.namespace_exists(settings.s3_bucket_name):
+        catalog.create_namespace(settings.s3_bucket_name)
+
     table = catalog.create_table_if_not_exists(
+        schema=playlistItemSchema,
         identifier=f"{settings.s3_bucket_name}.playlist_items",
         location=f"s3://{settings.s3_bucket_name}/curated/playlist_items/",
     )
 
-    table.upsert(arrow_table, join_cols="video_id", when_matched_update_all=True, when_not_matched_insert_all=True)
-
-    df.write_parquet(
-        f"s3://{settings.s3_bucket_name}/curated/playlist_items/data/ingestion_date={today_dt.strftime('%Y-%m-%d')}/run_id={run_id}/data.parquet",
-        storage_options={
-            "aws_endpoint_url": settings.aws_endpoint_url,
-            "aws_access_key_id": settings.aws_access_key_id,
-            "aws_secret_access_key": settings.aws_secret_access_key,
-            "aws_region": settings.aws_default_region,
-        },
+    table.upsert(
+        arrow_table,
+        join_cols=["video_id"],
+        when_matched_update_all=True,
+        when_not_matched_insert_all=True,
     )
+
 
 if __name__ == "__main__":
     import typer

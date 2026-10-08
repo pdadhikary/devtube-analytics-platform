@@ -70,3 +70,6 @@ dbt/logs/
 # duckdb
 duckdb/*
 !duckdb/.gitkeep
+
+# catalog db files
+**/*.db
