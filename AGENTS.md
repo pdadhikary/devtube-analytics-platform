@@ -2,8 +2,8 @@
 
 DevTube Analytics Platform — a data engineering + AI platform that answers
 "What is popular today in Dev YouTube?" Pipeline: batch ingestion → RustFS
-(S3-compatible)/Iceberg lakehouse → DuckDB/dbt analytics → trend scoring →
-RAG chat.
+(S3-compatible) raw lake + Parquet mirror → DuckDB/dbt warehouse (Bronze/
+Silver/Gold) → trend scoring → RAG chat.
 
 ## Product goals
 
@@ -41,7 +41,8 @@ This is a learning project: the user writes the backend by hand and learns by do
 
 - A fresh local environment can be created using Docker + Terraform against RustFS.
 - The batch pipeline ingests curated Tech YouTube data into immutable S3-compatible raw storage (RustFS).
-- Iceberg Bronze/Silver/Gold layers exist and can be queried reliably.
+- A DuckDB data warehouse with Bronze/Silver/Gold layers (built by dbt) exists and
+  can be queried reliably; a content-addressed Parquet mirror of the raw lake backs it.
 - DuckDB contains analytical models suitable for trend analysis.
 - dbt tests and data-quality checks catch invalid/duplicate data.
 - A reproducible orchestrated batch job produces updated trend results.
@@ -51,5 +52,5 @@ This is a learning project: the user writes the backend by hand and learns by do
 - Qdrant supports semantic retrieval with metadata/provenance.
 - The chat interface uses hybrid retrieval and produces source-grounded answers.
 - RAG retrieval and answer quality have a small documented evaluation set.
-- A simulated streaming path demonstrates continuous event processing into Iceberg.
+- A simulated streaming path demonstrates continuous event processing into the raw lake and DuckDB warehouse.
 - Tests, CI, structured logging, configuration hygiene, and documentation are present.

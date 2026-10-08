@@ -35,9 +35,10 @@ software development, AI/ML, Linux, programming, developer tooling, and SaaS.
 Enough videos to make the analytics meaningful; historical backfill is
 deliberately not the project itself.
 
-**MVP** — batch ingestion, S3-compatible raw storage (RustFS), Iceberg lakehouse, DuckDB analytics, dbt,
-orchestration, trend scoring, transcript/description enrichment, Qdrant vector
-search, hybrid retrieval, RAG with citations, and a simulated streaming path.
+**MVP** — batch ingestion, S3-compatible raw storage (RustFS) with a Parquet
+mirror, DuckDB data warehouse, dbt, orchestration, trend scoring,
+transcript/description enrichment, Qdrant vector search, hybrid retrieval, RAG
+with citations, and a simulated streaming path.
 
 **Out of scope** — Kubernetes, Spark clusters, sophisticated Flink deployments,
 model fine-tuning, custom LLMs, advanced computer vision, authentication,
@@ -60,7 +61,7 @@ devtube_ingestion   devtube_transformations   devtube_embeddings
         │                      │                      │
         └──────────────────────┼──────────────────────┘
                                ▼
-                       devtube_pipeline
+                       devtube_dagster
                                │
                    ┌───────────┴───────────┐
                    ▼                       ▼
@@ -78,11 +79,10 @@ devtube_ingestion   devtube_transformations   devtube_embeddings
 
 - `common` — shared models, configuration, and utilities
 - `devtube_ingestion` — YouTube API clients and raw data collection
-- `devtube_transformations` — Polars-based cleaning and conformance
+- `devtube_transformations` — Polars JSON→Parquet conformance (the Parquet mirror)
 - `devtube_embeddings` — chunking and embedding models
-- `devtube_pipeline` — batch and (simulated) streaming entrypoints
 - `devtube_rag` — hybrid retrieval and LLM answer synthesis
-- `devtube_dagster` — orchestration of the batch job
+- `devtube_dagster` — orchestration of the batch job and simulated streaming path
 - `devtube_api` — the FastAPI service (`/trends`, `/videos`, `/creators`, `/search`, `/chat`)
 - `apps/devtube_web` — React frontend (dashboard + chat)
 
@@ -97,101 +97,94 @@ End-to-end, from the YouTube API to the dashboard and chat:
                              │  Stats / Comments   │
                              └──────────┬──────────┘
                                         │
-                                        │ Batch ingestion
+                                        │ Batch ingestion (httpx)
                                         ▼
                              ┌─────────────────────┐
-                             │  Python Ingestion   │
-                             │       Polars        │
+                             │  devtube_ingestion  │
                              └──────────┬──────────┘
                                         │
-                                        │ Raw API responses
+                                        │ Raw API responses (JSON)
                                         ▼
-                   ┌─────────────────────────────────────────┐
-                   │                 RustFS                  │
-                   │          RAW DATA LAKE (S3 API)         │
-                   │                                         │
-                   │  videos/  channels/  comments/          │
-                   │  transcripts/  metrics/                 │
-                   └────────────────────┬────────────────────┘
-                                        │
-                                        ▼
-                   ┌─────────────────────────────────────────┐
-                   │             APACHE ICEBERG              │
-                   │                                         │
-                   │  ┌──────────┐  ┌──────────┐  ┌───────┐  │
-                   │  │  Bronze  │→ │  Silver  │→ │  Gold │  │
-                   │  └──────────┘  └──────────┘  └───────┘  │
-                   │                                         │
-                   │  Schema evolution / snapshots / ACID    │
-                   └────────────────────┬────────────────────┘
-                                        │
-                             ┌──────────┴──────────┐
+                    ┌─────────────────────────────────────────┐
+                    │                 RustFS                  │
+                    │            DATA LAKE (S3 API)           │
+                    │                                         │
+                    │  raw/      immutable JSON responses     │
+                    │            videos/ channels/ comments/  │
+                    │            transcripts/ metrics/        │
+                    │                                         │
+                    │  parquet/  conformed Parquet mirror     │
+                    │            (Polars, content-addressed)  │
+                    └────────┬─────────────────────┬──────────┘
                              │                     │
-                             ▼                     ▼
-                     ┌────────────────┐  ┌────────────────────┐
-                     │      dbt       │  │ Content Processing │
-                     │ Transformations│  │                    │
-                     └───────┬────────┘  │ Transcript         │
-                             │           │ Description        │
-                             ▼           │ Comments           │
-                     ┌────────────────┐  └─────────┬──────────┘
-                     │     DuckDB     │            │
-                     │  (dbt marts)   │            ▼
-                     │ Analytics      │   ┌─────────────────┐
-                     │ Trend metrics  │   │    Chunking     │
-                     │ Dimensions     │   │ + normalization │
-                     │ Facts          │   └────────┬────────┘
-                     └───────┬────────┘            │
-                             │                     ▼
-                             │            ┌─────────────────┐
-                             │            │   Embeddings    │
-                             │            └────────┬────────┘
-                             │                     │
-                             │                     ▼
-                             │            ┌─────────────────┐
-                             │            │     Qdrant      │
-                             │            │    Vector DB    │
-                             │            │                 │
-                             │            │ vectors +       │
-                             │            │ metadata        │
-                             │            └────────┬────────┘
-                             │                     │
-                             ▼                     ▼
-                   ┌─────────────────────────────────────────┐
-                   │                 FastAPI                 │
-                   │                                         │
-                   │  /trends    /videos    /creators        │
-                   │  /search    /chat                       │
-                   └────────────────────┬────────────────────┘
-                                        │
-                         ┌──────────────┴──────────────┐
-                         │                             │
-                         ▼                             ▼
-                  ┌──────────────┐              ┌──────────────┐
-                  │  Dashboard   │              │  Chat / RAG  │
-                  │              │              │              │
-                  │ Trending     │              │ "Why is      │
-                  │ topics       │              │ Claude Code  │
-                  │ creators     │              │ trending?"   │
-                  │ videos       │              │              │
-                  └──────────────┘              └──────┬───────┘
-                                                       │
-                                                       ▼
-                                                ┌──────────────┐
-                                                │     LLM      │
-                                                │              │
-                                                │ Synthesize   │
-                                                │ retrieved    │
-                                                │ evidence     │
-                                                └──────────────┘
+                             │ load Parquet        │ transcripts /
+                             ▼                     │ descriptions /
+                    ┌────────────────┐             │ comments
+                    │     DuckDB     │             │
+                    │   WAREHOUSE    │             ▼
+                    │                │  ┌─────────────────────┐
+                    │  ┌──────────┐  │  │ Content Processing  │
+                    │  │  Bronze  │  │  │  Transcript         │
+                    │  └────┬─────┘  │  │  Description        │
+                    │       ▼        │  │  Comments           │
+                    │  ┌──────────┐  │  └─────────┬───────────┘
+                    │  │  Silver  │  │            │
+                    │  └────┬─────┘  │            ▼
+                    │       ▼        │  ┌─────────────────┐
+                    │  ┌──────────┐  │  │    Chunking     │
+                    │  │   Gold   │  │  │ + normalization │
+                    │  └────┬─────┘  │  └────────┬────────┘
+                    │       ▼        │           │
+                    │  ┌──────────┐  │           ▼
+                    │  │  Trend   │  │  ┌─────────────────┐
+                    │  │  marts   │  │  │   Embeddings    │
+                    │  └──────────┘  │  └────────┬────────┘
+                    │                │           │
+                    │  built by dbt  │           ▼
+                    └────────┬───────┘  ┌─────────────────┐
+                             │          │     Qdrant      │
+                             │          │   Vector DB     │
+                             │          │                 │
+                             │          │ vectors +       │
+                             │          │ metadata        │
+                             │          └────────┬────────┘
+                             │                   │
+                             ▼                   ▼
+                    ┌─────────────────────────────────────────┐
+                    │                 FastAPI                 │
+                    │                                         │
+                    │  /trends    /videos    /creators        │
+                    │  /search    /chat                       │
+                    └────────────────────┬────────────────────┘
+                                         │
+                          ┌──────────────┴──────────────┐
+                          │                             │
+                          ▼                             ▼
+                   ┌──────────────┐              ┌──────────────┐
+                   │  Dashboard   │              │  Chat / RAG  │
+                   │              │              │              │
+                   │ Trending     │              │ "Why is      │
+                   │ topics       │              │ Claude Code  │
+                   │ creators     │              │ trending?"   │
+                   │ videos       │              │              │
+                   └──────────────┘              └──────┬───────┘
+                                                        │
+                                                        ▼
+                                                 ┌──────────────┐
+                                                 │     LLM      │
+                                                 │              │
+                                                 │ Synthesize   │
+                                                 │ retrieved    │
+                                                 │ evidence     │
+                                                 └──────────────┘
 ```
 
 After the raw data lake, the flow splits into two paths:
 
-- **Analytics path**: Iceberg Bronze → Silver → Gold, then dbt (via
-  dbt-duckdb) reads the Gold tables in place over S3 and materializes marts
-  into a local DuckDB database, producing the dimensions, facts, and trend
-  metrics.
+- **Analytics path**: a Dagster op reads the raw JSON, conforms it with Polars,
+  and writes a content-addressed Parquet mirror back to RustFS. A load step
+  brings the mirror into DuckDB, where dbt builds Bronze → Silver → Gold
+  (dimensions + `video_daily_metrics`) and the trend marts.
 - **Content path**: transcripts, descriptions, and comments are chunked,
   normalized, embedded, and stored in Qdrant with full provenance metadata.
 
@@ -208,8 +201,8 @@ never raw lifetime views alone.
 | Containers | Docker + Docker Compose |
 | Infrastructure | Terraform + Docker Compose (RustFS object storage) |
 | Object storage | RustFS (S3-compatible) |
-| Lakehouse | Apache Iceberg + Parquet |
-| Analytics engine | DuckDB (embedded, dbt-duckdb) |
+| Data lake | RustFS (S3-compatible): raw JSON + Parquet mirror |
+| Data warehouse | DuckDB (embedded), Bronze/Silver/Gold + marts via dbt |
 | Transformations | dbt (dbt-duckdb) |
 | Batch processing | Polars |
 | Orchestration | Dagster |

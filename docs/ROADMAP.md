@@ -16,7 +16,7 @@ Nothing downstream works without local object storage (RustFS), so this comes fi
 1. Initial `git` commit of the scaffold.
 2. Harden `.gitignore`: `.env`, secrets, Terraform state/plan files, dbt artifacts.
 3. `docker-compose.yml`: RustFS (S3-compatible object storage), Qdrant, Postgres
-   (Dagster metadata), Iceberg catalog (e.g. Polaris).
+   (Dagster metadata).
 4. terraform against rustfs: the object storage bucket.
 5. `.env` with `YOUTUBE_API_KEY` (never committed).
 6. Config hygiene: one place for credentials/endpoints, documented.
@@ -32,7 +32,7 @@ environment can be created using Docker + Terraform against RustFS.*
 2. Pydantic validation models in `common` (IDs, timestamps, counts, relationships).
 3. Idempotent, immutable raw writes: deterministic object keys, no overwrites;
    keep the original API response byte-for-byte.
-4. `devtube_pipeline`: minimal Dagster job running ingestion; structured logs
+4. `devtube_dagster`: minimal Dagster job running ingestion; structured logs
    (`run_id`, duration, records written/failed).
 5. pytest unit tests (mocked HTTP) + integration test against local object storage (RustFS).
 
@@ -41,27 +41,40 @@ is intact under `videos/`, `channels/`, `comments/`, `transcripts/`, `metrics/`.
 Definition of done: *batch pipeline ingests curated Tech YouTube data into
 immutable S3-compatible raw storage (RustFS).*
 
-## Milestone 2 — Iceberg Bronze/Silver/Gold (~2–3 days)
+## Milestone 2 — Parquet mirror + DuckDB Bronze/Silver (~2–3 days)
 
-1. Bronze: raw JSON → Iceberg/Parquet as-read.
-2. Silver: dedupe, conform schema, standardize timestamps, validate relationships.
-3. Gold: analytics-ready dimensions (`channels`, `videos`, `dates`, `topics`) and
-   the fact table `video_daily_metrics`.
-4. Incremental processing: watermark-based, no full recompute per run.
+1. Parquet mirror: a Dagster op reads the raw JSON, conforms it with Polars
+   (`devtube_transformations`), and writes content-addressed Parquet back to
+   RustFS (`parquet/`). Idempotent: unchanged input → identical keys, zero new
+   objects.
+2. Determinism check: run the mirror twice; Parquet output must be
+   byte-identical (required for the sha256 keying).
+3. DuckDB warehouse: `duckdb/devtube.duckdb`; a load op brings the Parquet
+   mirror into DuckDB tables.
+4. dbt project (`dbt/`): sources over the loaded tables → Bronze (thin landing)
+   → Silver (dedupe, conform schema, standardize timestamps, validate
+   relationships).
+5. Incremental processing: the mirror is append-only; dbt models from Silver up
+   materialize incrementally keyed on `snapshot_date` — watermark-based, no full
+   recompute per run.
 
-**Verify:** each layer is queryable; schema evolution, snapshots, and ACID
-behavior are demonstrable. Definition of done: *Iceberg Bronze/Silver/Gold layers
-exist and can be queried reliably.*
+**Verify:** the mirror double-run creates zero new objects and byte-identical
+files; Bronze/Silver are queryable in DuckDB; dbt runs green. Definition of done:
+*DuckDB Bronze/Silver layers exist and can be queried reliably; the Parquet
+mirror is idempotent.*
 
-## Milestone 3 — dbt (dbt-duckdb) + trend scoring (~2–3 days)
+## Milestone 3 — dbt Gold + trend scoring (~2–3 days)
 
-1. dbt project: staging and mart models materializing into a local DuckDB database.
+1. Gold: analytics-ready dimensions (`channels`, `videos`, `dates`, `topics`)
+   and the fact table `video_daily_metrics`.
 2. dbt tests + data-quality checks: `not_null`, `unique`, `relationships`,
    `accepted_values`; catch invalid/duplicate data.
 3. Trend scoring — not raw lifetime views: velocity × recency × engagement ×
    cross-channel spread; derived metrics (views/day, engagement rate, velocity
    change, distinct creators/videos per topic, comment velocity).
-4. Trend output tables for topics, videos, creators.
+4. Trend output tables/marts for topics, videos, creators.
+5. dbt snapshots for slowly-changing entities — the time-travel substitute now
+   that the warehouse is DuckDB.
 
 **Verify:** dbt tests fail on bad data; a reproducible orchestrated batch job
 produces updated trend results. This closes the *batch ingestion + analytics*
@@ -96,11 +109,12 @@ documented evaluation set.*
 ## Milestone 6 — Streaming simulation (~1–1.5 days)
 
 1. A simulated continuous event source (e.g. fake view/comment events).
-2. Continuous event processing into Iceberg.
+2. Continuous event processing into the raw lake and DuckDB warehouse.
 
-**Verify:** the path demonstrates incremental event ingestion into the lakehouse
-without re-running the batch. Definition of done: *a simulated streaming path
-demonstrates continuous event processing into Iceberg.*
+**Verify:** the path demonstrates incremental event ingestion into the lake and
+warehouse without re-running the batch. Definition of done: *a simulated
+streaming path demonstrates continuous event processing into the raw lake and
+DuckDB warehouse.*
 
 ## Milestone 7 — React frontend (~2–3 days)
 
@@ -134,3 +148,6 @@ Agent-authored, against the `devtube_api` contracts from Milestone 5.
   (embedded, via dbt-duckdb) for analytics. These replace the Floci AWS
   emulator, whose Redshift `DescribeClusters` response omits fields the
   Terraform provider requires (https://github.com/floci-io/floci/issues/3098).
+- The medallion architecture lives in DuckDB (built by dbt); RustFS holds the
+  immutable raw JSON plus a content-addressed Parquet mirror. Iceberg was
+  dropped as overkill for a single-node project.
