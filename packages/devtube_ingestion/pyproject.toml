@@ -7,7 +7,24 @@ authors = [
     { name = "Deepta", email = "deeptoadhikary@gmail.com" }
 ]
 requires-python = ">=3.13"
-dependencies = []
+dependencies = [
+    "common",
+    "boto3>=1.43.89",
+    "httpx>=0.28.1",
+    "polars>=1.44.1",
+    "pydantic>=2.13.5",
+    "pyyaml>=6.0.3",
+    "yt-dlp>=2026.8.19",
+    "pydantic-settings>=2.15.0",
+    "httpx-retries>=0.6.0",
+    "typer>=0.27.2",
+    "boto3-stubs[s3]>=1.43.108",
+    "pyiceberg>=0.12.0",
+    "pyarrow>=25.0.1",
+]
+
+[tool.uv.sources]
+common = { workspace = true }
 
 [build-system]
 requires = ["uv_build>=0.11.22,<0.12.0"]

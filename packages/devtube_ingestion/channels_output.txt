@@ -1,0 +1,130 @@
+Retreiving videos from channel=Theo - t3․gg
+	1. I love Ultrafast (it's unusable) - 2026-10-06T12:40:33Z
+	2. Anthropic Made Claude Even Better - 2026-10-05T05:35:48Z
+	3. If you have a Claude sub, watch this - 2026-10-02T01:58:48Z
+
+Retreiving videos from channel=Low Level
+	1. Massive corporate hack - 2026-10-01T14:27:43Z
+	2. the change is finally coming - 2026-09-29T13:16:52Z
+	3. VIM is Performative #linux #vim #chatgpt #coding - 2026-09-27T13:15:46Z
+
+Retreiving videos from channel=The PrimeTime
+	1. Astra Ultrafast - 2026-10-06T13:07:24Z
+	2. WTF Microsoft - 2026-10-05T13:00:10Z
+	3. A total disaster - 2026-10-03T03:48:31Z
+
+Retreiving videos from channel=Fireship
+	1. PewDiePie is setting AI free... and OpenAI is furious - 2026-10-05T20:34:44Z
+	2. The one OpenAI announcement that can actually make you money... - 2026-10-01T19:34:14Z
+	3. Did a 50 year old military secret just solve agent prompt injection? - 2026-09-30T17:16:43Z
+
+Retreiving videos from channel=The Linux Experiment
+	1. Firefox Gets (too) Rounded, Flatpak for CLI & Dev tools, Ubuntu does tiling now - Linux Weekly News - 2026-10-03T09:20:23Z
+	2. Windows is losing users FAST: what is happening and what you can do - 2026-10-01T10:39:17Z
+	3. Google is closing down Android more and more, Netherlands move to Linux - Linux Weekly News - 2026-09-26T09:35:53Z
+
+Retreiving videos from channel=Typecraft
+	1. this file is a TRAP in linux - 2026-10-02T17:30:49Z
+	2. this file is FAKE in Linux - 2026-09-29T20:48:51Z
+	3. The "Best" Linux Laptop - 2026-09-22T12:00:37Z
+
+Retreiving videos from channel=Chris Titus Tech
+	1. He Built CentOS Linux. Now He Wants Truly Open AI. - 2026-10-06T11:15:33Z
+	2. Less Bugs, Better Windows Utility - 2026-09-30T11:15:08Z
+	3. The Desktop I Wanted Didn't Exist... So I Built It - 2026-09-25T11:15:16Z
+
+Retreiving videos from channel=bigboxSWE
+	1. Why C++ can never be replaced - 2026-09-25T12:40:06Z
+	2. Programming rabbit holes to escape web dev - 2026-09-20T14:11:40Z
+	3. Coding interviews have become insane - 2026-08-19T14:54:24Z
+
+Retreiving videos from channel=Tsoding
+	1. I was wrong about Subversion - 2026-06-07T17:19:02Z
+	2. C Strings are Terrible! - 2026-03-19T19:48:52Z
+	3. Insane Shadow Data Trick in C - 2026-02-25T19:52:50Z
+
+Retreiving videos from channel=Matt Pocock
+	1. New Skills! v1.3 brings /pr, /implement-spec, and /retro - 2026-10-05T10:50:24Z
+	2. LIVE: Poteto (creator of pstack) on shipping 1,000's of PR's a month at SpaceX - 2026-10-03T05:08:12Z
+	3. LIVE: Uncle Bob on Software Fundamentals in the Age of AI - 2026-08-19T16:21:41Z
+
+Retreiving videos from channel=Matt Wolfe
+	1. AI News: Dots, GPT-6.1 Sol, Sonnet 5.5, Gemini 4, and everything you need to know - 2026-10-02T15:00:16Z
+	2. AI Made a Game I’d ACTUALLY Play - 2026-09-30T12:15:21Z
+	3. This AI Model Is INSANELY Fast & Cheap - 2026-09-28T17:07:47Z
+
+Retreiving videos from channel=AI Explained
+	1. OpenAI Security: Controlling Models is Now ‘Hell’ - 2026-10-01T21:20:12Z
+	2. Opus 5.5: How Close Are We to Automated AI Research? - 2026-09-24T22:51:54Z
+	3. What AI Researchers Saw, Before Their Demand to ‘Pace’ AI - 2026-09-16T20:51:40Z
+
+Retreiving videos from channel=Google DeepMind
+	1. From deepfakes to DNA: the science of watermarking AI - 2026-10-01T16:37:46Z
+	2. Create your own voices with Gemini 3.8 text-to-speech - 2026-09-23T15:23:38Z
+	3. How AI is transforming weather prediction - 2026-09-09T16:10:39Z
+
+Retreiving videos from channel=Anthropic
+	1. Inside Anthropic's molecular biology lab - 2026-09-23T18:01:32Z
+	2. Meet Claude Fable 5.1 - 2026-09-01T19:21:24Z
+	3. Introducing Claude Fable 5.1 - 2026-09-01T18:02:31Z
+
+Retreiving videos from channel=Wes Roth
+	1. OpenAI's employee's WARNING - 2026-10-04T14:11:55Z
+	2. GEMINI 4 is nuts... - 2026-10-01T12:53:12Z
+	3. ASTRA 6.1 too dangerous to be released... - 2026-09-29T17:45:24Z
+
+Retreiving videos from channel=Matthew Berman
+	1. Mistral is BACK! (Le Chonk) - 2026-10-07T00:12:03Z
+	2. Video Game Mashups: Minecraft and Mario in Elden Ring - 2026-10-06T08:13:55Z
+	3. DeepSeek Painted My Portrait - 2026-10-04T20:05:25Z
+
+Retreiving videos from channel=Better Stack
+	1. Doom Now Runs Inside a Database #doom #sql #programming - 2026-10-06T20:00:38Z
+	2. A Fly Brain Is Playing Doom… #google #neuroscience #ai - 2026-10-06T18:00:23Z
+	3. Git's First Breaking Release Since 2014 #git #sha256 #programming - 2026-10-06T15:30:34Z
+
+Retreiving videos from channel=Sajjaad Khader
+	1. The Art of Winning in Tech - 2026-10-05T21:00:12Z
+	2. LinkedIn CEOO explains the AI Job Market - 2026-10-03T22:00:06Z
+	3. What do Forward Deployed Engineers ACTUALLY do? - 2026-10-03T06:00:07Z
+
+Retreiving videos from channel=Michael Tunnell
+	1. A Windows User Tried Linux for a Day … I Have Thoughts - 2026-10-02T21:17:01Z
+	2. 30 Years of KDE: Inside Plasma 6.8, Wayland Switch, & more with Nate Graham & Aleix Pol - 2026-09-27T14:58:12Z
+	3. Linux on M3 Macs, GNOME 51, Steam Frame, Jellyfin 12, Microsoft 365 on Linux, & more Linux news - 2026-09-21T15:40:01Z
+
+Retreiving videos from channel=Reluctant Anarchist
+	1. Steam Frame Could Quietly Change PC Gaming Forever! - 2026-09-01T16:15:19Z
+	2. Steam Machine Is a Work of Art! - 2026-08-04T19:16:06Z
+	3. The hardest controller to buy right now! - 2026-07-14T10:00:25Z
+
+Retreiving videos from channel=AI Search
+	1. The AI unlock has begun - 2026-10-06T03:36:24Z
+	2. Gemini 4, GPT 6.1, Plasma conjecture, Napoleon code solved, OpenAI Dots, Claude Sonnet 5.5: AI NEWS - 2026-10-04T03:28:38Z
+	3. Waifus incoming, GPT 6 Sol, Grok 4.7, Opus 5.5, Mimo 2.6, Step 5, OpenMuse: AI NEWS - 2026-09-27T03:24:32Z
+
+Retreiving videos from channel=Tristen O'Brien
+	1. Claude Code Just Dropped MODS. (Master it in 10 Minutes). - 2026-10-05T13:00:34Z
+	2. Opus 5.5 Made Claude Code Unstoppable | 7 Levels in 13 Minutes - 2026-09-30T13:00:24Z
+	3. How the Top 1% Create Animated Instagram Carousels With AI - 2026-09-27T13:00:23Z
+
+Retreiving videos from channel=Chase AI
+	1. Claude Now Does Video (FOR FREE) Thanks To JavaScript - 2026-10-06T17:00:09Z
+	2. Claude Mods Is The Biggest Claude Code Upgrade Since Skills - 2026-10-02T10:43:31Z
+	3. You're Using Jev + Claude Wrong - 2026-10-02T07:04:53Z
+
+Retreiving videos from channel=NeetCode
+	1. Does Python make sense for large projects? - 2026-06-17T22:18:53Z
+	2. When Casey Muratori stopped using C++ - 2026-05-17T22:07:21Z
+	3. Why Casey Muratori avoids AI - 2026-05-15T19:58:36Z
+
+Retreiving videos from channel=Eli the Computer Guy
+	1. SpaceX Stock Soaring to $300 a Share - The Matrix is Hallucinating - 2026-10-06T18:30:27Z
+	2. Trump Rebrands AI to Super Intelligence - China Has Industrial Policy and USA Has Truths - 2026-10-06T12:00:23Z
+	3. Anthropic AI IPO Shows $518 Billion in Non-Cancellable Deals - AI Bubble Is HUGE - 2026-10-05T18:00:25Z
+
+Retreiving videos from channel=The Tech Report
+	1. The Tech Report Live Stream - 2026-10-06T09:57:59Z
+	2. "Superintelligence Is 'Completely Stupid' – Eli the Computer Guy - 2026-10-05T17:30:13Z
+	3. Anthropic IPO: "This is a dog of a company" | Ed Zitron - 2026-10-02T17:00:08Z
+

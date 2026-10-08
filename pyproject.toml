@@ -9,7 +9,13 @@ authors = [
 requires-python = ">=3.13"
 dependencies = [
     "dbt-duckdb>=1.11.0",
+    "common",
+    "devtube-ingestion",
 ]
+
+[tool.uv.sources]
+common = { workspace = true }
+devtube-ingestion = { workspace = true }
 
 [tool.uv]
 package = false
@@ -32,6 +38,8 @@ dev = [
     "boto3>=1.43.89",
     "duckdb",
     "psycopg[binary]>=3.3.5",
+    "pytest>=9.1.1",
+    "respx>=0.23.1",
 ]
 
 [tool.ty.environment]
