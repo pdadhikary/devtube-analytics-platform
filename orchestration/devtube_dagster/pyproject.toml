@@ -12,7 +12,13 @@ dependencies = [
     "dagster-dg-cli>=1.13.21",
     "dagster-postgres>=0.29.21",
     "dagster-webserver>=1.13.21",
+    "devtube-pipeline",
+    "psycopg2-binary>=2.9.13",
 ]
+
+
+[tool.uv.sources]
+devtube-pipeline = { workspace = true }
 
 [build-system]
 requires = ["uv_build>=0.11.22,<0.12.0"]

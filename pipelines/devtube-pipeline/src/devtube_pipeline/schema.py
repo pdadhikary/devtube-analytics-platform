@@ -12,7 +12,13 @@ playlistItemSchema = Schema(
     ),
     NestedField(field_id=6, name="channel_id", field_type=StringType(), required=True),
     NestedField(
-        field_id=7, name="ingested_at", field_type=TimestamptzType(), required=True
+        field_id=7,
+        name="video_published_dt",
+        field_type=TimestamptzType(),
+        required=True,
+    ),
+    NestedField(
+        field_id=8, name="ingested_at", field_type=TimestamptzType(), required=True
     ),
 )
 
@@ -24,6 +30,7 @@ playlistItemArrowSchema = pa.schema(
         pa.field("run_id", pa.string(), nullable=False),
         pa.field("channel_title", pa.string(), nullable=False),
         pa.field("channel_id", pa.string(), nullable=False),
+        pa.field("video_published_dt", pa.timestamp("us", tz="UTC"), nullable=False),
         pa.field("ingested_at", pa.timestamp("us", tz="UTC"), nullable=False),
     ]
 )

@@ -46,5 +46,6 @@ class PlaylistItemTableRow(BaseModel):
     run_id: str
     channel_title: str
     channel_id: str
+    video_published_dt: datetime
     ingested_at: datetime
 
