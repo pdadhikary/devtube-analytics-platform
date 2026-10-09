@@ -73,3 +73,6 @@ duckdb/*
 
 # catalog db files
 **/*.db
+
+# dagster .gitignore
+**/.dagster_home/
