@@ -8,13 +8,22 @@ from devtube_pipeline.models import VideoTableRow
 
 logger = structlog.get_logger(__name__)
 
+THUMBNAIL_QUALITY_PREFERENCE = ("maxres", "standard", "high", "medium", "default")
+
+
+def select_best_thumbnail(thumbnails: dict[str, Any]) -> dict[str, Any]:
+    for quality in THUMBNAIL_QUALITY_PREFERENCE:
+        if quality in thumbnails:
+            return thumbnails[quality]
+    return max(thumbnails.values(), key=lambda t: t.get("width", 0))
+
 
 def to_video_row(
     video: dict[str, Any], run_id: str, ingested_at: datetime
 ) -> VideoTableRow:
     snippet = video["snippet"]
     statistics = video.get("statistics", {})
-    thumbnail = snippet["thumbnails"]["default"]
+    thumbnail = select_best_thumbnail(snippet["thumbnails"])
     return VideoTableRow(
         video_id=video["id"],
         title=snippet["title"],
