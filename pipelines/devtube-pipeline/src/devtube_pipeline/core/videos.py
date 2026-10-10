@@ -1,4 +1,3 @@
-from collections.abc import Iterator
 from datetime import datetime
 from typing import Any
 
@@ -8,11 +7,6 @@ import structlog
 from devtube_pipeline.models import VideoTableRow
 
 logger = structlog.get_logger(__name__)
-
-
-def batched_video_ids(video_ids: list[str], batch_size: int = 50) -> Iterator[list[str]]:
-    for i in range(0, len(video_ids), batch_size):
-        yield video_ids[i : i + batch_size]
 
 
 def to_video_row(

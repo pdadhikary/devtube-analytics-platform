@@ -1,5 +1,4 @@
 import json
-from typing import Any
 
 import httpx
 import structlog
@@ -8,8 +7,8 @@ from pydantic import BaseModel
 from pyiceberg.catalog import Catalog
 from types_boto3_s3 import S3Client
 
+from devtube_pipeline.core.raw_layout import build_raw_object_key
 from devtube_pipeline.core.videos import (
-    batched_video_ids,
     filter_videos_by_duration,
     to_video_row,
 )
@@ -17,6 +16,8 @@ from devtube_pipeline.models import PlaylistItemTableRow, VideoTableRow
 from devtube_pipeline.schema import videoArrowSchema, videoSchema
 from devtube_pipeline.settings import settings
 from devtube_pipeline.utils import get_today_dt, model_to_arrow_table
+from devtube_pipeline.warehouse import ensure_table_and_upsert
+from devtube_pipeline.youtube import fetch_video_payloads
 
 logger = structlog.get_logger(__name__)
 
@@ -52,39 +53,10 @@ def ingest_videos(
 
     today_dt = get_today_dt()
 
-    payloads: list[dict[str, Any]] = []
-    for video_id_batch in batched_video_ids(video_ids, batch_size=50):
-        logger.info(
-            "videos.yt_payload_ingestion_started",
-            run_id=run_id,
-            video_id_batch=video_id_batch,
-        )
-
-        response = yt_client.get(
-            "/videos",
-            params={
-                "part": "id,snippet,statistics,contentDetails",
-                "id": ",".join(video_id_batch),
-                "maxResults": 50,
-            },
-        )
-
-        if response.status_code != 200:
-            logger.error(
-                "videos.yt_payload_ingestion_failed",
-                run_id=run_id,
-                status_code=response.status_code,
-                response_text=response.text[:200],
-                endpoint=response.url.path,
-                video_id_batch=video_id_batch,
-            )
-            continue
-
-        payloads.append(response.json())
-
-    logger.info(
-        "videos.yt_payload_ingestion_success",
-        payload_count=len(payloads),
+    payloads = fetch_video_payloads(
+        yt_client=yt_client,
+        video_ids=video_ids,
+        run_id=run_id,
     )
 
     table_rows: list[VideoTableRow] = [
@@ -106,33 +78,30 @@ def ingest_videos(
     arrow_table = model_to_arrow_table(table_rows, videoArrowSchema)
 
     try:
-        if not catalog.namespace_exists(settings.s3_bucket_name):
-            catalog.create_namespace(settings.s3_bucket_name)
-
-        table = catalog.create_table_if_not_exists(
-            schema=videoSchema,
-            identifier=f"{settings.s3_bucket_name}.videos",
+        upsert_result = ensure_table_and_upsert(
+            catalog=catalog,
+            namespace=settings.s3_bucket_name,
+            table_name="videos",
             location=f"s3://{settings.s3_bucket_name}/curated/videos/",
-        )
-
-        upsert_result = table.upsert(
-            arrow_table,
+            schema=videoSchema,
+            arrow_table=arrow_table,
             join_cols=["video_id"],
-            when_matched_update_all=True,
-            when_not_matched_insert_all=True,
         )
         num_new_videos_added = upsert_result.rows_inserted
     except Exception:
         logger.error("videos.iceberg_catalog_upsert_failed", run_id=run_id)
         raise
-    finally:
-        catalog.close()
 
     try:
         for batch_index, payload in enumerate(payloads):
             if not payload["items"]:
                 continue
-            object_key = f"raw/videos/ingestion_date={today_dt.strftime('%Y-%m-%d')}/run_id={run_id}/batch={batch_index}/payload.json"
+            object_key = build_raw_object_key(
+                kind="videos",
+                ingestion_date=today_dt,
+                run_id=run_id,
+                partitions={"batch": str(batch_index)},
+            )
             s3_client.put_object(
                 Bucket=settings.s3_bucket_name,
                 Key=object_key,
@@ -142,8 +111,6 @@ def ingest_videos(
     except ClientError as e:
         logger.error("videos.s3_put_object_failed", run_id=run_id, error=e)
         raise
-    finally:
-        s3_client.close()
 
     return VideosIngestionResult(
         num_videos_processed=num_videos_processed,
