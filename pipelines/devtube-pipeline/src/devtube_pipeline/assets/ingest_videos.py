@@ -8,10 +8,16 @@ from pyiceberg.catalog import Catalog
 from types_boto3_s3 import S3Client
 
 from devtube_pipeline.core.raw_layout import build_raw_object_key
+from devtube_pipeline.core.thumbnails import (
+    build_thumbnail_object_key,
+    build_thumbnail_s3_uri,
+    extension_for_image,
+)
 from devtube_pipeline.core.videos import (
     filter_videos_by_duration,
     to_video_row,
 )
+from devtube_pipeline.media import fetch_image
 from devtube_pipeline.models import PlaylistItemTableRow, VideoTableRow
 from devtube_pipeline.schema import videoArrowSchema, videoSchema
 from devtube_pipeline.settings import settings
@@ -27,11 +33,26 @@ class VideosIngestionResult(BaseModel):
     num_new_videos_added: int
     num_shorts_discarded: int
     num_long_forms_discarded: int
+    num_thumbnails_uploaded: int = 0
+    num_thumbnails_reused: int = 0
+    num_thumbnail_failures: int = 0
+
+
+def object_exists(s3_client: S3Client, bucket: str, key: str) -> bool:
+    try:
+        s3_client.head_object(Bucket=bucket, Key=key)
+    except ClientError as e:
+        error_code = e.response.get("Error", {}).get("Code", "")
+        if error_code in ("404", "NoSuchKey", "NotFound"):
+            return False
+        raise
+    return True
 
 
 def ingest_videos(
     run_id: str,
     yt_client: httpx.Client,
+    image_client: httpx.Client,
     s3_client: S3Client,
     catalog: Catalog,
 ) -> VideosIngestionResult:
@@ -75,14 +96,59 @@ def ingest_videos(
         )
     )
 
+    bucket = settings.s3_bucket_name
+    num_thumbnails_uploaded = 0
+    num_thumbnails_reused = 0
+    num_thumbnail_failures = 0
+
+    for row in table_rows:
+        try:
+            existing_key = build_thumbnail_object_key(
+                row.video_id, extension_for_image(None, row.thumbnail_url)
+            )
+            if object_exists(s3_client, bucket, existing_key):
+                row.s3_uri = build_thumbnail_s3_uri(bucket, existing_key)
+                num_thumbnails_reused += 1
+                continue
+
+            image = fetch_image(image_client, row.thumbnail_url)
+            key = build_thumbnail_object_key(
+                row.video_id,
+                extension_for_image(image.content_type, row.thumbnail_url),
+            )
+            s3_client.put_object(
+                Bucket=bucket,
+                Key=key,
+                Body=image.data,
+                ContentType=image.content_type or "image/jpeg",
+            )
+            row.s3_uri = build_thumbnail_s3_uri(bucket, key)
+            num_thumbnails_uploaded += 1
+        except (httpx.HTTPError, ClientError) as e:
+            num_thumbnail_failures += 1
+            logger.warning(
+                "videos.thumbnail_upload_failed",
+                run_id=run_id,
+                video_id=row.video_id,
+                error=e,
+            )
+
+    logger.info(
+        "videos.thumbnail_ingestion_finished",
+        run_id=run_id,
+        uploaded_count=num_thumbnails_uploaded,
+        reused_count=num_thumbnails_reused,
+        failed_count=num_thumbnail_failures,
+    )
+
     arrow_table = model_to_arrow_table(table_rows, videoArrowSchema)
 
     try:
         upsert_result = ensure_table_and_upsert(
             catalog=catalog,
-            namespace=settings.s3_bucket_name,
+            namespace=bucket,
             table_name="videos",
-            location=f"s3://{settings.s3_bucket_name}/curated/videos/",
+            location=f"s3://{bucket}/curated/videos/",
             schema=videoSchema,
             arrow_table=arrow_table,
             join_cols=["video_id"],
@@ -103,7 +169,7 @@ def ingest_videos(
                 partitions={"batch": str(batch_index)},
             )
             s3_client.put_object(
-                Bucket=settings.s3_bucket_name,
+                Bucket=bucket,
                 Key=object_key,
                 Body=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
                 ContentType="application/json",
@@ -117,4 +183,7 @@ def ingest_videos(
         num_new_videos_added=num_new_videos_added,
         num_shorts_discarded=num_shorts_discarded,
         num_long_forms_discarded=num_long_forms_discarded,
+        num_thumbnails_uploaded=num_thumbnails_uploaded,
+        num_thumbnails_reused=num_thumbnails_reused,
+        num_thumbnail_failures=num_thumbnail_failures,
     )

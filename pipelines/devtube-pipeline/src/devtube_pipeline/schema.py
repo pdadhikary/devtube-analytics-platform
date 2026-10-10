@@ -79,6 +79,9 @@ videoSchema = Schema(
     NestedField(
         field_id=14, name="description", field_type=StringType(), required=False
     ),
+    NestedField(
+        field_id=17, name="s3_uri", field_type=StringType(), required=False
+    ),
     NestedField(field_id=15, name="run_id", field_type=StringType(), required=True),
     NestedField(
         field_id=16, name="ingested_at", field_type=TimestamptzType(), required=True
@@ -102,6 +105,7 @@ videoArrowSchema = pa.schema(
         pa.field("channel_id", pa.string(), nullable=False),
         pa.field("category_id", pa.string(), nullable=False),
         pa.field("description", pa.string(), nullable=True),
+        pa.field("s3_uri", pa.string(), nullable=True),
         pa.field("run_id", pa.string(), nullable=False),
         pa.field("ingested_at", pa.timestamp("us", tz="UTC"), nullable=False),
     ]

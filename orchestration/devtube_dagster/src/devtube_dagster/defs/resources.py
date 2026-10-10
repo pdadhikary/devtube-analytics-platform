@@ -62,3 +62,15 @@ class YoutubeClientResource(dg.ConfigurableResource):
             yield client
         finally:
             client.close()
+
+
+class ImageClientResource(dg.ConfigurableResource):
+    @contextmanager
+    def yield_for_execution(
+        self, context: dg.InitResourceContext
+    ) -> Iterator[httpx.Client]:
+        client = httpx.Client(timeout=20.0, follow_redirects=True)
+        try:
+            yield client
+        finally:
+            client.close()

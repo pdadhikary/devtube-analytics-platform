@@ -31,5 +31,6 @@ class VideoTableRow(BaseModel):
     channel_id: str
     category_id: str
     description: str | None = None
+    s3_uri: str | None = None
     run_id: str
     ingested_at: datetime

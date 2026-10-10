@@ -4,6 +4,7 @@ from devtube_dagster.defs.assets import playlist_items, videos
 from devtube_dagster.defs.jobs import devtube_ingestion_job
 from devtube_dagster.defs.resources import (
     CatalogResource,
+    ImageClientResource,
     S3Resource,
     YoutubeClientResource,
 )
@@ -19,6 +20,7 @@ defs = dg.Definitions(
     ],
     resources={
         "youtube": YoutubeClientResource(),
+        "image_client": ImageClientResource(),
         "s3": S3Resource(),
         "catalog": CatalogResource(),
     },

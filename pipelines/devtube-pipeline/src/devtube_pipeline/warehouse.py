@@ -25,6 +25,10 @@ def ensure_table_and_upsert(
         location=location,
     )
 
+    if set(arrow_table.schema.names) - {f.name for f in table.schema().fields}:
+        table.update_schema().union_by_name(arrow_table.schema).commit()
+        table.refresh()
+
     return table.upsert(
         arrow_table,
         join_cols=join_cols,

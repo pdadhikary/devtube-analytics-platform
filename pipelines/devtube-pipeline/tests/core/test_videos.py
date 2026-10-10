@@ -86,6 +86,7 @@ class TestToVideoRow:
         assert row.channel_id == "UCx1"
         assert row.category_id == "28"
         assert row.description == "some text"
+        assert row.s3_uri is None
         assert row.run_id == "run-1"
         assert row.ingested_at == ingested_at
 
