@@ -1,9 +1,10 @@
 from datetime import datetime
+from typing import Any
 
 import httpx
 import structlog
 
-from devtube_pipeline.models import PlaylistItemTableRow, PlaylistResponse
+from devtube_pipeline.models import PlaylistItemTableRow
 from devtube_pipeline.settings import settings
 from devtube_pipeline.utils import parse_iso_to_datetime
 
@@ -12,8 +13,8 @@ logger = structlog.get_logger(__name__)
 
 def fetch_recently_uploaded_playlist_items(
     run_id: str, channel_ids: list[str], yt_client: httpx.Client
-) -> list[PlaylistResponse]:
-    responses: list[PlaylistResponse] = []
+) -> list[dict[str, Any]]:
+    payloads: list[dict[str, Any]] = []
     for channel_id in channel_ids:
         recently_uploaded_playlistId = channel_id.replace("C", "U", 1)
 
@@ -29,7 +30,7 @@ def fetch_recently_uploaded_playlist_items(
             params={
                 "part": "id,snippet,contentDetails",
                 "playlistId": recently_uploaded_playlistId,
-                "maxResults": settings.max_videos_per_playlist,
+                "maxResults": settings.max_videos_per_channel,
             },
         )
 
@@ -45,37 +46,42 @@ def fetch_recently_uploaded_playlist_items(
             )
             continue
 
-        responses.append(PlaylistResponse.model_validate(response.json()))
+        payloads.append(response.json())
 
     logger.info(
         "playlist_items.yt_playload_ingestion_success",
-        payload_count=len(responses),
+        payload_count=len(payloads),
     )
 
-    return responses
+    return payloads
 
 
-def to_playlist_item_table_row(
-    run_id: str, responses: list[PlaylistResponse], ingested_at: datetime
+def to_playlist_item_table_rows(
+    run_id: str, payloads: list[dict[str, Any]], ingested_at: datetime
 ) -> list[PlaylistItemTableRow]:
     table_rows: list[PlaylistItemTableRow] = []
-    for response in responses:
-        for item in response.items:
+    for payload in payloads:
+        for item in payload["items"]:
+            snippet = item["snippet"]
+            details = item["contentDetails"]
+
             row = PlaylistItemTableRow(
-                video_id=item.contentDetails.videoId,
-                playlist_id=item.snippet.playlistId,
-                video_title=item.snippet.title,
+                video_id=details["videoId"],
+                playlist_id=snippet["playlistId"],
+                video_title=snippet["title"],
                 run_id=run_id,
-                channel_title=item.snippet.channelTitle,
-                channel_id=item.snippet.channelId,
-                video_published_dt=parse_iso_to_datetime(item.contentDetails.videoPublishedAt),
+                channel_title=snippet["channelTitle"],
+                channel_id=snippet["channelId"],
+                video_published_dt=parse_iso_to_datetime(
+                    details["videoPublishedAt"]
+                ),
                 ingested_at=ingested_at,
             )
 
             table_rows.append(row)
     logger.info(
         "playlist_items.payload_row_extraction_success",
-        payload_count=len(responses),
+        payload_count=len(payloads),
         row_count=len(table_rows),
     )
     return table_rows

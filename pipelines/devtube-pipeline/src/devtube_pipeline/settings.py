@@ -21,14 +21,16 @@ class IngestionSettings(BaseSettings):
     transcript_sources: list[Literal["manual", "auto"]]
     video_windows_days: int = Field(default=7, ge=1)
     comment_threads_per_video: int = Field(default=30, ge=1)
-    max_videos_per_playlist: int = Field(default=10, ge=1)
+    max_videos_per_channel: int = Field(default=10, ge=1)
     video_limit: int = Field(default=500, ge=1)
+    max_video_duration_seconds: int = Field(default=2700, ge=1)
+    shorts_max_duration_seconds: int = Field(default=90, ge=1)
 
     @property
     def aws_endpoint_url(self) -> str:
         return self.aws_endpoint_url_http.encoded_string().rstrip('/')
 
 
-settings = IngestionSettings()
+settings = IngestionSettings() # type: ignore[call-arg]
 
 __all__ = ["settings"]

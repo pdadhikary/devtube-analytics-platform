@@ -1,8 +1,6 @@
 import dagster as dg
 
-from devtube_dagster.defs.assets import (
-    playlist_items,
-)
+from devtube_dagster.defs.assets import playlist_items, videos
 from devtube_dagster.defs.jobs import devtube_ingestion_job
 from devtube_dagster.defs.resources import (
     CatalogResource,
@@ -12,9 +10,7 @@ from devtube_dagster.defs.resources import (
 from devtube_dagster.defs.schedules import devtube_pipeline_schedule
 
 defs = dg.Definitions(
-    assets=[
-        playlist_items,
-    ],
+    assets=[playlist_items, videos],
     jobs=[
         devtube_ingestion_job,
     ],

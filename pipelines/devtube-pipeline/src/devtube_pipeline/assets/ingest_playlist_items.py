@@ -1,19 +1,21 @@
-import boto3
+import json
+
 import httpx
-import pyarrow as pa
 import structlog
 from botocore.exceptions import ClientError
 from pydantic import BaseModel
 from pyiceberg.catalog import Catalog
+from types_boto3_s3 import S3Client
 
 import devtube_pipeline.core.playlists as pl_ingest
-from devtube_pipeline.models import PlaylistItemTableRow, PlaylistResponse
+from devtube_pipeline.models import PlaylistItemTableRow
 from devtube_pipeline.schema import playlistItemArrowSchema, playlistItemSchema
 from devtube_pipeline.settings import settings
 from devtube_pipeline.utils import (
     get_channel_ids,
     get_n_days_ago,
     get_today_dt,
+    model_to_arrow_table,
 )
 
 logger = structlog.get_logger(__name__)
@@ -29,22 +31,20 @@ def ingest_playlist_items(
     run_id: str,
     channels_yaml_file: str,
     yt_client: httpx.Client,
-    s3_client: boto3.client,
+    s3_client: S3Client,
     catalog: Catalog,
 ) -> PlaylistItemIngestionResult:
     channel_ids = get_channel_ids(channels_yaml_file)
 
     today_dt = get_today_dt()
-    responses: list[PlaylistResponse] = (
-        pl_ingest.fetch_recently_uploaded_playlist_items(
-            run_id=run_id, channel_ids=channel_ids, yt_client=yt_client
-        )
+    payloads = pl_ingest.fetch_recently_uploaded_playlist_items(
+        run_id=run_id, channel_ids=channel_ids, yt_client=yt_client
     )
 
-    num_payload = len(responses)
+    num_payload = len(payloads)
 
-    table_rows: list[PlaylistItemTableRow] = pl_ingest.to_playlist_item_table_row(
-        run_id=run_id, responses=responses, ingested_at=today_dt
+    table_rows: list[PlaylistItemTableRow] = pl_ingest.to_playlist_item_table_rows(
+        run_id=run_id, payloads=payloads, ingested_at=today_dt
     )
     num_items_extracted = len(table_rows)
 
@@ -56,9 +56,7 @@ def ingest_playlist_items(
     )
     num_items_filtered = len(table_rows)
 
-    arrow_table = pa.Table.from_pylist(
-        [row.model_dump() for row in table_rows], schema=playlistItemArrowSchema
-    )
+    arrow_table = model_to_arrow_table(table_rows, playlistItemArrowSchema)
 
     try:
         if not catalog.namespace_exists(settings.s3_bucket_name):
@@ -83,13 +81,16 @@ def ingest_playlist_items(
         catalog.close()
 
     try:
-        for response in responses:
-            playlist_id = response.items[0].snippet.playlistId
+        for payload in payloads:
+            items = payload["items"]
+            if not items:
+                continue
+            playlist_id = items[0]["snippet"]["playlistId"]
             object_key = f"raw/playlist_items/ingestion_date={today_dt.strftime('%Y-%m-%d')}/playlist_id={playlist_id}/run_id={run_id}/payload.json"
             s3_client.put_object(
                 Bucket=settings.s3_bucket_name,
                 Key=object_key,
-                Body=response.model_dump_json().encode("utf-8"),
+                Body=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
                 ContentType="application/json",
             )
     except ClientError as e:

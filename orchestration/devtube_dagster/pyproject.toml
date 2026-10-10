@@ -27,6 +27,9 @@ build-backend = "uv_build"
 [tool.ty.environment]
 python = "../../.venv"
 
+[tool.zuban]
+python_executable = "../../.venv/bin/python"
+
 [tool.dg]
 directory_type = "project"
 

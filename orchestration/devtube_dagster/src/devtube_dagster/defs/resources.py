@@ -5,8 +5,8 @@ import boto3
 import dagster as dg
 import httpx
 from devtube_pipeline.settings import settings
-from mypy_boto3_s3 import S3Client
 from pyiceberg.catalog import Catalog, load_catalog
+from types_boto3_s3 import S3Client
 
 
 class S3Resource(dg.ConfigurableResource):

@@ -1,42 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel
-
-
-class ResourceId(BaseModel):
-    kind: str
-    videoId: str
-
-
-class ContentDetails(BaseModel):
-    videoId: str
-    videoPublishedAt: str
-
-
-class Snippet(BaseModel):
-    publishedAt: str
-    channelId: str
-    title: str
-    description: str
-    channelTitle: str
-    playlistId: str
-    position: int
-    resourceId: ResourceId
-
-
-class PlaylistItem(BaseModel):
-    kind: str
-    etag: str
-    id: str
-    snippet: Snippet
-    contentDetails: ContentDetails
-
-
-class PlaylistResponse(BaseModel):
-    kind: str
-    etag: str
-    nextPageToken: str | None = None
-    items: list[PlaylistItem]
+from pydantic import BaseModel, ConfigDict
 
 
 class PlaylistItemTableRow(BaseModel):
@@ -49,3 +13,23 @@ class PlaylistItemTableRow(BaseModel):
     video_published_dt: datetime
     ingested_at: datetime
 
+
+class VideoTableRow(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    video_id: str
+    title: str
+    tags: list[str] | None = None
+    published_at: datetime
+    duration: int
+    view_count: int | None = None
+    like_count: int | None = None
+    comment_count: int | None = None
+    thumbnail_url: str
+    thumbnail_width: int
+    thumbnail_height: int
+    channel_id: str
+    category_id: str
+    description: str | None = None
+    run_id: str
+    ingested_at: datetime

@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
@@ -23,7 +24,7 @@ def get_uuid() -> str:
     return str(uuid4())
 
 
-def model_to_arrow_table(model: list[BaseModel], schema: pa.schema) -> pa.Table:
+def model_to_arrow_table(model: Sequence[BaseModel], schema: pa.schema) -> pa.Table:
     arrow_table = pa.Table.from_pylist(
         [row.model_dump() for row in model], schema=schema
     )
