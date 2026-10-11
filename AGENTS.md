@@ -18,24 +18,25 @@ Each goal states a question the system should answer:
 
 ## Roles
 
-This is a learning project: the user writes the backend by hand and learns by doing.
-
-- **Backend, pipelines, infrastructure** (everything outside `apps/devtube_web/`):
-  advisory only. Read any file to review or explain it, but make no edits without
-  the user's explicit permission for that specific task. Feedback should reference
-  `file:line` and explain the reasoning so the user can implement it themselves.
-- **Frontend React app** (`apps/devtube_web/`): the agent is the primary author.
-  It owns this code end to end — implementation, refactors, fixes, and tests —
-  and keeps it consistent with the platform's API contracts.
+The agent is the primary author for the whole project — backend, pipelines,
+infrastructure, and the React app (`apps/devtube_web/`). It owns implementation,
+refactors, fixes, and tests end to end, and keeps every layer consistent with the
+platform's API contracts. The user remains the decision maker on scope and
+direction.
 
 ## Working mode
 
-- Advisory answers first: diagnose, review, propose. The user decides.
-- Suggestions state the change and why; the user applies them unless the agent
-  owns the file or holds explicit permission for the task.
+- Diagnose from evidence first: reproduce the failure, identify the root cause,
+  then fix it. Reference `file:line` in the explanation.
 - Build each milestone as a working increment: finish batch ingestion and
   analytics before adding RAG, finish RAG before adding streaming, use the
   final days for hardening rather than new technologies.
+
+## Tooling
+
+- Type-check with `zuban`; it is the project's type checker and `ty` is being
+  removed. `zuban check` needs source directories, not package roots, e.g.
+  `uv run zuban check pipelines/devtube-pipeline/src orchestration/devtube_dagster/src`.
 
 ## Definition of done
 

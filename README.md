@@ -11,9 +11,7 @@ attention, and provides an evidence-grounded chat interface for deeper questions
 Core product thesis: **data engineering determines what is happening; AI
 engineering helps explain why it is happening**, using the underlying evidence.
 
-The project is built as a 15-day learning-by-doing project at roughly 3–4 hours
-per day (45–60 hours total, deadline September 15). It prioritizes
-production-grade engineering practices over feature count.
+The platform prioritizes production-grade engineering practices over feature count.
 
 ## Product goals
 
