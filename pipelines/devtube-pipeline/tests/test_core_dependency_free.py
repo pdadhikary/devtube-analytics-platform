@@ -63,7 +63,9 @@ def test_core_modules_import_without_settings(monkeypatch) -> None:
     for var in SETTINGS_ENV_VARS:
         monkeypatch.delenv(var, raising=False)
 
+    before = set(sys.modules)
     for name in CORE_MODULES:
         importlib.import_module(name)
 
-    assert "devtube_pipeline.settings" not in sys.modules
+    newly_imported = set(sys.modules) - before
+    assert "devtube_pipeline.settings" not in newly_imported

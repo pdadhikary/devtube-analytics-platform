@@ -46,9 +46,15 @@ def fetch_playlist_item_payloads(
             continue
 
         payloads.append(response.json())
+        logger.info(
+            "playlist_items.yt_payload_ingestion_success",
+            run_id=run_id,
+            playlist_id=recently_uploaded_playlist_id,
+            channel_id=channel_id,
+        )
 
     logger.info(
-        "playlist_items.yt_payload_ingestion_success",
+        "playlist_items.yt_payload_ingestion_finished",
         payload_count=len(payloads),
     )
 
@@ -91,9 +97,65 @@ def fetch_video_payloads(
             continue
 
         payloads.append(response.json())
+        logger.info(
+            "videos.yt_payload_ingestion_success",
+            run_id=run_id,
+            video_id_batch=video_id_batch,
+        )
 
     logger.info(
-        "videos.yt_payload_ingestion_success",
+        "videos.yt_payload_ingestion_finished",
+        payload_count=len(payloads),
+    )
+
+    return payloads
+
+
+def fetch_comment_thread_payloads(
+    yt_client: httpx.Client,
+    video_ids: list[str],
+    max_results_per_video: int,
+    run_id: str,
+) -> list[dict[str, Any]]:
+    payloads: list[dict[str, Any]] = []
+    max_results = min(max_results_per_video, 100)
+    for video_id in video_ids:
+        logger.info(
+            "comment_threads.yt_payload_ingestion_started",
+            run_id=run_id,
+            video_id=video_id,
+        )
+
+        response = yt_client.get(
+            "/commentThreads",
+            params={
+                "part": "id,snippet,replies",
+                "videoId": video_id,
+                "order": "relevance",
+                "maxResults": max_results,
+            },
+        )
+
+        if response.status_code != 200:
+            logger.error(
+                "comment_threads.yt_payload_ingestion_failed",
+                run_id=run_id,
+                status_code=response.status_code,
+                response_text=response.text[:200],
+                endpoint=response.url.path,
+                video_id=video_id,
+            )
+            continue
+
+        payloads.append(response.json())
+        logger.info(
+            "comment_threads.yt_payload_ingestion_success",
+            run_id=run_id,
+            video_id=video_id,
+        )
+
+    logger.info(
+        "comment_threads.yt_payload_ingestion_finished",
         payload_count=len(payloads),
     )
 

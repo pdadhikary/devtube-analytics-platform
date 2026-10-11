@@ -110,3 +110,77 @@ videoArrowSchema = pa.schema(
         pa.field("ingested_at", pa.timestamp("us", tz="UTC"), nullable=False),
     ]
 )
+
+
+commentSchema = Schema(
+    NestedField(field_id=1, name="run_id", field_type=StringType(), required=True),
+    NestedField(field_id=2, name="comment_id", field_type=StringType(), required=True),
+    NestedField(field_id=3, name="video_id", field_type=StringType(), required=True),
+    NestedField(
+        field_id=4, name="parent_comment_id", field_type=StringType(), required=False
+    ),
+    NestedField(
+        field_id=5, name="total_reply_count", field_type=IntegerType(), required=True
+    ),
+    NestedField(field_id=6, name="author_name", field_type=StringType(), required=False),
+    NestedField(
+        field_id=7, name="author_channel_id", field_type=StringType(), required=False
+    ),
+    NestedField(field_id=8, name="like_count", field_type=LongType(), required=False),
+    NestedField(
+        field_id=9, name="text_original", field_type=StringType(), required=False
+    ),
+    NestedField(
+        field_id=10, name="published_at", field_type=TimestamptzType(), required=False
+    ),
+    NestedField(
+        field_id=11, name="updated_at", field_type=TimestamptzType(), required=False
+    ),
+    NestedField(
+        field_id=12, name="ingested_at", field_type=TimestamptzType(), required=True
+    ),
+)
+
+
+commentArrowSchema = pa.schema(
+    [
+        pa.field("run_id", pa.string(), nullable=False),
+        pa.field("comment_id", pa.string(), nullable=False),
+        pa.field("video_id", pa.string(), nullable=False),
+        pa.field("parent_comment_id", pa.string(), nullable=True),
+        pa.field("total_reply_count", pa.int32(), nullable=False),
+        pa.field("author_name", pa.string(), nullable=True),
+        pa.field("author_channel_id", pa.string(), nullable=True),
+        pa.field("like_count", pa.int64(), nullable=True),
+        pa.field("text_original", pa.string(), nullable=True),
+        pa.field("published_at", pa.timestamp("us", tz="UTC"), nullable=True),
+        pa.field("updated_at", pa.timestamp("us", tz="UTC"), nullable=True),
+        pa.field("ingested_at", pa.timestamp("us", tz="UTC"), nullable=False),
+    ]
+)
+
+
+transcriptSchema = Schema(
+    NestedField(field_id=1, name="run_id", field_type=StringType(), required=True),
+    NestedField(field_id=2, name="video_id", field_type=StringType(), required=True),
+    NestedField(field_id=3, name="lang", field_type=StringType(), required=False),
+    NestedField(field_id=4, name="source", field_type=StringType(), required=False),
+    NestedField(field_id=5, name="text", field_type=StringType(), required=False),
+    NestedField(field_id=6, name="s3_uri", field_type=StringType(), required=False),
+    NestedField(
+        field_id=7, name="ingested_at", field_type=TimestamptzType(), required=True
+    ),
+)
+
+
+transcriptArrowSchema = pa.schema(
+    [
+        pa.field("run_id", pa.string(), nullable=False),
+        pa.field("video_id", pa.string(), nullable=False),
+        pa.field("lang", pa.string(), nullable=True),
+        pa.field("source", pa.string(), nullable=True),
+        pa.field("text", pa.string(), nullable=True),
+        pa.field("s3_uri", pa.string(), nullable=True),
+        pa.field("ingested_at", pa.timestamp("us", tz="UTC"), nullable=False),
+    ]
+)
